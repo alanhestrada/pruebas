@@ -8,6 +8,12 @@ class UrlMappings {
             }
         }
 
+        "/persona/$id/direccion/$idDir"(controller: "persona", parseRequest:true){
+            action = [DELETE:"deleteDireccion" ]
+            constraints={
+            }
+        }
+
 
         "/"(view:"/index")
         "500"(view:'/error')

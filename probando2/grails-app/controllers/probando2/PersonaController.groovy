@@ -55,6 +55,30 @@ class PersonaController {
         render resp as JSON
     }
 
+    def deleteDireccion() {
+        println "==========    [INICIA_DELETE_DE_DIRECCION]    =========="
+        Map<String, Object> queryStrings = getParams() //QueryParams
+
+        print "queryStrings id: " + queryStrings.id
+        print "queryStrings idDir: " + queryStrings.idDir
+
+        Map resp
+        if (personaService.validacionDeleteDireccion(queryStrings)) {
+            def data = personaService.datosValidosDeleteDireccion(queryStrings)   //paso los datos formateados
+
+            if (personaService.deleteDireccion(data)) {
+                resp = [response: ["message": "Direccion borrada"], status: 200]
+            }else{
+                resp = [response: ["message": "No existe la direccion a borrar"], status: 404]
+            }
+        }else
+            resp = [response: ["message": "Los datos ingresados son incorrectos"], status:400]
+
+        print "Mapa Final: "+resp
+
+        render resp as JSON
+    }
+
     def postPersona(){
         println "==========    [INICIA_POST_DE_PERSONA]    =========="
         Map json = request.getJSON()

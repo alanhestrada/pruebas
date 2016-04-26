@@ -29,6 +29,20 @@ class PersonaService {
         }
     }
 
+
+    def deleteDireccion(Map data) {
+        def persona = Persona.get(data.id)
+        def direccion = Direccion.get(data.idDir)
+
+        if (persona) {
+            print "Se a borrado direccion ${data.idDir} de la persona ${data.id}"
+            direccion.delete(flush: true)
+            return true
+        } else {
+            return false
+        }
+    }
+
     def postPersona(Map data) {
         print "POST PERSONA : "
         Persona persona1 = new Persona()
@@ -77,6 +91,15 @@ class PersonaService {
         return datosValidosPersona
     }
 
+    Map<String, Object> datosValidosDeleteDireccion(Map<String, Object> data) {
+        def datosValidosPersona = [:]
+        datosValidosPersona.id = data.id as Integer
+        datosValidosPersona.idDir = data.idDir as Integer
+
+        print "Se obtuvo el mapa validado ${datosValidosPersona}"
+        return datosValidosPersona
+    }
+
     Map<String, Object> datosValidosPostPersona(Map<String, Object> data) {
         def datosValidosPersona = [:]
         datosValidosPersona.nombre = data.nombre as String
@@ -104,19 +127,18 @@ class PersonaService {
         }
         datosDeSalidaPersona.direcciones = []
         persona.direcciones.each {
-            def dir = [:]
-            dir.id=it.id
-            dir.calle=it.calle
-            dir.numero=it.numero
-            if(!(it.dpto == null)) {
-                dir.dpto = it.dpto
+                def dir = [:]
+                dir.id = it.id
+                dir.calle = it.calle
+                dir.numero = it.numero
+                if (!(it.dpto == null)) {
+                    dir.dpto = it.dpto
+                }
+                if (!(it.piso == null)) {
+                    dir.piso = it.piso
+                }
+                datosDeSalidaPersona.direcciones.push(dir)
             }
-            if(!(it.piso == null)) {
-                dir.piso = it.piso
-            }
-            datosDeSalidaPersona.direcciones.push(dir)
-        }
-
 
         return datosDeSalidaPersona
     }
@@ -154,6 +176,34 @@ class PersonaService {
             return false
         }
 
+        print "Paso las validaciones"
+
+        return true
+    }
+
+    boolean validacionDeleteDireccion(Map<String, Object> data) {
+        print "Entro a la validacion"
+
+        try {
+            Integer id = data.id as Integer
+            if (id < 1) {
+                print "El id Persona No es mayor o igual a 1: ${id}"
+                return false
+            }
+        } catch (Exception e) {
+            print "No es numerico"
+            return false
+        }
+        try {
+            Integer idDir = data.idDir as Integer
+            if (idDir< 1) {
+                print "El id Direccion No es mayor o igual a 1: ${idDir}"
+                return false
+            }
+        } catch (Exception e) {
+            print "No es numerico"
+            return false
+        }
         print "Paso las validaciones"
 
         return true
