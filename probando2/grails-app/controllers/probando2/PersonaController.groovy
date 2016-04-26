@@ -9,7 +9,6 @@ class PersonaController {
 
 
     def getPersona() {
-
         println "==========    [INICIA_GET_DE_PERSONA]    =========="
         Map<String, Object> queryStrings = getParams() //QueryParams
 
@@ -20,7 +19,8 @@ class PersonaController {
             def data = personaService.datosValidosGetPersona(queryStrings)   //paso los datos formateados
             Map persona = personaService.getPersona(data)
             if (persona) {
-                resp = [response: persona, status: 200]
+                Map respuesta = [Persona: persona]
+                resp = [response: respuesta, status: 200]
             }else{
                 resp = [response: ["message": "No existe la persona"], status: 404]
             }
@@ -41,9 +41,9 @@ class PersonaController {
         Map resp
         if (personaService.validacionDeletePersona(queryStrings)) {
             def data = personaService.datosValidosDeletePersona(queryStrings)   //paso los datos formateados
-            Map persona = personaService.deletePersona(data)
-            if (persona) {
-                resp = [response: persona, status: 200]
+
+            if (personaService.deletePersona(data)) {
+                resp = [response: ["message": "Persona borrada"], status: 404]
             }else{
                 resp = [response: ["message": "No existe la persona a borrar"], status: 404]
             }
@@ -58,7 +58,7 @@ class PersonaController {
     def postPersona(){
         println "==========    [INICIA_POST_DE_PERSONA]    =========="
         Map json = request.getJSON()
-        Map queryStrings = getParams()
+
 
         Map resp
         if (personaService.validacionPostPersona(json))

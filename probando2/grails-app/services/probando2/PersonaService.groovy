@@ -20,51 +20,45 @@ class PersonaService {
         def persona = Persona.get(data.id)
 
         if (persona) {
-            persona.delete(flush: true)
             print "Se a borrado la persona ${data.id}"
             print "Persona Borrada: ${persona}"
+            persona.delete(flush: true)
+            return true
         } else {
-            return null
+            return false
         }
     }
 
     def postPersona(Map data) {
+        print "POST PERSONA : "
+        Persona persona1 = new Persona()
+        persona1.nombre= data.nombre
+        persona1.apellido= data.apellido
+        persona1.edad= data.edad
+        persona1.email=data.email
+        persona1.save(flush: true)
 
-            Persona persona = new Persona(
-                    nombre: data.nombre,
-                    apellido: data.apellido,
-                    edad: data.edad,
-                    email: data.email,
-                    direccion: data.direccion
-            )
-        persona.save(flush: true)
 
-        if (persona) {
-            print "Se ha agregado una persona"
-            if(data.containsKey("email") ){
-                return [
-                        nombre   : persona.nombre,
-                        apellido : persona.apellido,
-                        edad     : persona.edad,
-                        email    : persona.email,
-                        direccion: persona.direccion
-                ]
-            }
-            else  {
-                return [
-                        nombre   : persona.nombre,
-                        apellido : persona.apellido,
-                        edad     : persona.edad,
-
-                        direccion: persona.direccion
-                ]
-            }
+         print "direcciones post"+ data.direcciones
+        List<Direccion> listDir = []
+        data.direcciones.each{
+            Direccion dir = new Direccion()
+            dir.calle= it.calle
+            dir.numero= it.numero
+            dir.dpto=it.dpto
+            dir.piso=it.piso
+            dir.persona= persona1
+            dir.save(flush: true)
+            listDir.push(dir)
         }
-        else{
+
+        persona1.direcciones=listDir
+        print "las persona" +persona1.properties
+        if (persona1) {
+            return datosDeSalidaPersona(persona1)
+        } else {
             return null
         }
-
-
     }
 
     Map<String, Object> datosValidosGetPersona(Map<String, Object> data) {
@@ -90,22 +84,39 @@ class PersonaService {
         datosValidosPersona.edad = data.edad as Integer
         if (data.containsKey("email"))
             datosValidosPersona.email = data.email as String
-        datosValidosPersona.direccion = data.direccion as String
+        datosValidosPersona.direcciones = data.direcciones
 
         print "Se obtuvo el mapa validado"
         return datosValidosPersona
     }
 
-    Map<String, Object> datosDeSalidaPersona(Persona data) {
+
+    Map<String, Object> datosDeSalidaPersona(Persona persona) {
         def datosDeSalidaPersona = [:]
 
-        datosDeSalidaPersona.id = data.id
-        datosDeSalidaPersona.nombre = data.nombre
-        datosDeSalidaPersona.apellido = data.apellido
-        datosDeSalidaPersona.edad = data.edad
-        if (!(data.email == null))
-         {datosDeSalidaPersona.email = data.email}
-        datosDeSalidaPersona.direccion = data.direccion
+        datosDeSalidaPersona.id = persona.id
+        datosDeSalidaPersona.nombre = persona.nombre
+        datosDeSalidaPersona.apellido = persona.apellido
+        datosDeSalidaPersona.edad = persona.edad
+
+        if (!(persona.email == null)) {
+            datosDeSalidaPersona.email = persona.email
+        }
+        datosDeSalidaPersona.direcciones = []
+        persona.direcciones.each {
+            def dir = [:]
+            dir.id=it.id
+            dir.calle=it.calle
+            dir.numero=it.numero
+            if(!(it.dpto == null)) {
+                dir.dpto = it.dpto
+            }
+            if(!(it.piso == null)) {
+                dir.piso = it.piso
+            }
+            datosDeSalidaPersona.direcciones.push(dir)
+        }
+
 
         return datosDeSalidaPersona
     }
@@ -162,23 +173,42 @@ class PersonaService {
         if (!(json.edad instanceof Integer)) {
             print "La edad no es un entero"
             return false
-        } else{
-          if(
-          json.edad <= 0){
-              print "La edad no puede ser menor o igual que 0"
-              return false
-          }
-      }
-      if (json.containsKey("email")){
-          if(!(json.email instanceof String)){
-              print "El email no es un string"
-              return false
-          }
-      }
-      if (!(json.direccion instanceof String)){
-          print "La direccion no es un string"
-          return false
-      }
-      return true
+        } else {
+            if (json.edad <= 0) {
+                print "La edad no puede ser menor o igual que 0"
+                return false
+            }
+        }
+        if (json.containsKey("email")) {
+            if (!(json.email instanceof String)) {
+                print "El email no es un string"
+                return false
+            }
+        }
+     if(json.containsKey("direcciones")) {
+         json.direcciones.each {
+             if (!(it.calle instanceof String)) {
+                 print "La calle no es un string"
+                 return false
+             }
+             if (!(it.numero instanceof Integer)) {
+                 print "El numero no es un integer"
+                 return false
+             }
+             if (it.numero < 0) {
+                 print "El numero es negativo"
+                 return false
+             }
+             if (!(it.dpto instanceof String)) {
+                 print "El dpto no es un string"
+                 return false
+             }
+             if (!(it.piso instanceof Integer)) {
+                 print "El piso no es un entero"
+                 return false
+             }
+         }
+     }
+        return true
     }
 }
