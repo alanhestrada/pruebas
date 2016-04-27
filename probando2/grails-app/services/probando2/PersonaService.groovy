@@ -9,7 +9,7 @@ class PersonaService {
         print "Get de la persona: ${persona?.properties} "
 
         if (persona) {
-            return datosDeSalidaPersona(persona) // ver esto que devuelvo
+            return datosDeSalidaPersona(persona)
         } else {
             return null
         }
@@ -52,8 +52,6 @@ class PersonaService {
         persona1.email=data.email
         persona1.save(flush: true)
 
-
-         print "direcciones post"+ data.direcciones
         List<Direccion> listDir = []
         data.direcciones.each{
             Direccion dir = new Direccion()
@@ -75,6 +73,55 @@ class PersonaService {
         }
     }
 
+    def putPersona(Map data) {
+        def persona = Persona.get(data.id)
+        if(data.containsKey("nombre")) {
+            persona.nombre = data.nombre
+        }
+
+        if(data.containsKey("apellido")){
+            persona.apellido=data.apellido
+        }
+        if(data.containsKey("edad")) {
+            persona.edad = data.edad
+        }
+        if (data.containsKey("email")){
+            persona.email= data.email
+        }
+        if(data.containsKey("direcciones")){
+            data.direcciones.each{
+                persona.direcciones = it
+            }
+        }
+        persona.save(flush: true)
+        if (persona) {
+            return datosDeSalidaPersona(persona)
+        } else {
+            return null
+        }
+
+    }
+    def putDireccion(Map data) {
+        def direccion = Direccion.get(data.idDir)
+        def persona= Persona.get(data.id)
+
+        if(data.containsKey("direcciones")) {
+            data.direcciones.each {
+                direccion.calle = it.calle
+                direccion.numero = it.numero
+                direccion.dpto = it.dpto
+                direccion.piso = it.piso
+                direccion.persona = persona
+                direccion.save(flush: true)
+            }
+        }
+        if (direccion) {
+            return datosDeSalidaDireccion(direccion)
+        } else {
+            return null
+        }
+
+    }
     Map<String, Object> datosValidosGetPersona(Map<String, Object> data) {
         def datosValidosPersona = [:]
         datosValidosPersona.id = data.id as Integer
@@ -113,6 +160,42 @@ class PersonaService {
         return datosValidosPersona
     }
 
+    Map<String, Object> datosValidosPutPersona(Map<String, Object> data, Map<String , Object> params) {
+        def datosValidosPersona = [:]
+
+        datosValidosPersona.id = params.id
+
+        if (data.containsKey("nombre")){
+            datosValidosPersona.nombre = data.nombre as String
+        }
+        if(data.containsKey("apellido")) {
+            datosValidosPersona.apellido = data.apellido as String
+        }
+        if (data.containsKey("edad")){
+            datosValidosPersona.edad = data.edad as Integer
+        }
+        if (data.containsKey("email")){
+            datosValidosPersona.email = data.email as String
+        }
+        if (data.containsKey("direcciones")) {
+            datosValidosPersona.direcciones = data.direcciones
+        }
+        print "Se obtuvo el mapa validado"+datosValidosPersona
+
+        return datosValidosPersona
+    }
+
+    Map<String, Object> datosValidosPutDireccion(Map<String, Object> data, Map<String , Object> params) {
+        def datosValidosPersona = [:]
+
+        datosValidosPersona.id = params.id
+        datosValidosPersona.idDir = params.idDir
+        if (data.containsKey("direcciones")) {
+            datosValidosPersona.direcciones = data.direcciones
+        }
+        return datosValidosPersona
+    }
+
 
     Map<String, Object> datosDeSalidaPersona(Persona persona) {
         def datosDeSalidaPersona = [:]
@@ -129,8 +212,12 @@ class PersonaService {
         persona.direcciones.each {
                 def dir = [:]
                 dir.id = it.id
-                dir.calle = it.calle
-                dir.numero = it.numero
+                if (!(it.calle == null)) {
+                     dir.calle = it.calle
+                }
+                if (!(it.numero == null)) {
+                    dir.numero = it.numero
+                }
                 if (!(it.dpto == null)) {
                     dir.dpto = it.dpto
                 }
@@ -139,12 +226,28 @@ class PersonaService {
                 }
                 datosDeSalidaPersona.direcciones.push(dir)
             }
-
         return datosDeSalidaPersona
+    }
+    Map<String, Object> datosDeSalidaDireccion(Direccion direccion){
+        def datosDeSalidaDireccion = [:]
+        datosDeSalidaDireccion.id=direccion.id
+        if(!((direccion.calle) == null)){
+            datosDeSalidaDireccion.calle = direccion.calle
+        }
+        if(!((direccion.numero) == null)){
+            datosDeSalidaDireccion.numero= direccion.numero
+        }
+        if(!((direccion.dpto) == null)){
+            datosDeSalidaDireccion.dpto = direccion.dpto
+        }
+        if(!((direccion.piso) == null)) {
+            datosDeSalidaDireccion.piso = direccion.piso
+        }
+
+        return datosDeSalidaDireccion
     }
 
     boolean validacionGetPersona(Map<String, Object> data) {
-        print "Entro a la validacion"
 
         try {
             Integer id = data.id as Integer
@@ -163,7 +266,6 @@ class PersonaService {
     }
 
     boolean validacionDeletePersona(Map<String, Object> data) {
-        print "Entro a la validacion"
 
         try {
             Integer id = data.id as Integer
@@ -182,7 +284,6 @@ class PersonaService {
     }
 
     boolean validacionDeleteDireccion(Map<String, Object> data) {
-        print "Entro a la validacion"
 
         try {
             Integer id = data.id as Integer
@@ -210,7 +311,6 @@ class PersonaService {
     }
 
     boolean validacionPostPersona(Map<String, Object> json) {
-        print "Entro a la validacion de persona"
 
         if (!(json.nombre instanceof String)) {
             print "El no nombre no es un string"
@@ -259,6 +359,120 @@ class PersonaService {
              }
          }
      }
+        return true
+    }
+
+    boolean validacionPutPersona(Map<String, Object> json, Map<String, Object> params) {
+
+        try {
+            Integer id = params.id as Integer
+            if (id < 1) {
+                print "No es mayor o igual a 1: ${id}"
+                return false
+            }
+        } catch (Exception e) {
+            print "No es numerico"
+            return false
+        }
+
+        if (json.containsKey("apellido")) {
+            if (!(json.apellido) instanceof String) {
+                print "El apellido no es un string"
+                return false
+            }
+        }
+        if (json.containsKey("edad")) {
+            if (!(json.edad) instanceof Integer) {
+                print "La edad no es un Entero"
+                return false
+            }
+            if (json.edad < 0) {
+                print "La edad no es negativa"
+                return false
+            }
+        }
+        if (json.containsKey("email")) {
+            if (!(json.email) instanceof String) {
+                print "La email no es un String"
+                return false
+            }
+        }
+
+        if (json.containsKey("direcciones")) {
+            json.direcciones.each {
+                if (!(it.calle instanceof String)) {
+                    print "La calle no es un string"
+                    return false
+                }
+                if (!(it.numero instanceof Integer)) {
+                    print "El numero no es un integer"
+                    return false
+                }
+                if (it.numero < 0) {
+                    print "El numero es negativo"
+                    return false
+                }
+                if (!(it.dpto instanceof String)) {
+                    print "El dpto no es un string"
+                    return false
+                }
+                if (!(it.piso instanceof Integer)) {
+                    print "El piso no es un entero"
+                    return false
+                }
+            }
+        }
+        return true
+    }
+
+    boolean validacionPutDireccion(Map<String, Object> json, Map<String, Object> params) {
+        try {
+            Integer id = params.id as Integer
+            if (id < 1) {
+                print "el id Persona No es mayor o igual a 1: ${id}"
+                return false
+            }
+        } catch (Exception e) {
+            print "el id No es numerico"
+            return false
+        }
+
+        try {
+            Integer idDir = params.idDir as Integer
+            if (idDir < 1) {
+                print "el id Direccion No es mayor o igual a 1: ${idDir}"
+                return false
+            }
+        } catch (Exception e) {
+            print " El idDir No es numerico"
+            return false
+        }
+
+
+        if (json.containsKey("direcciones")) {
+            json.direcciones.each {
+                if (!(it.calle instanceof String)) {
+                    print "La calle no es un string"
+                    return false
+                }
+                if (!(it.numero instanceof Integer)) {
+                    print "El numero no es un integer"
+                    return false
+                }
+                if (it.numero < 0) {
+                    print "El numero es negativo"
+                    return false
+                }
+                if (!(it.dpto instanceof String)) {
+                    print "El dpto no es un string"
+                    return false
+                }
+                if (!(it.piso instanceof Integer)) {
+                    print "El piso no es un entero"
+                    return false
+                }
+            }
+        }
         return true
     }
 }
