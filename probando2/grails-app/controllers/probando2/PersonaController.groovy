@@ -102,4 +102,50 @@ class PersonaController {
         render resp as JSON
     }
 
+    def putPersona(){
+        println "==========    [INICIA_PUT_DE_PERSONA]    =========="
+        Map json = request.getJSON()
+        Map querystring = getParams()
+        Map resp
+
+        if (personaService.validacionPutPersona(json,querystring))
+        {
+            def data = personaService.datosValidosPutPersona(json, querystring)
+            Map persona = personaService.putPersona(data)
+            if(persona){
+                resp = [response: persona, status: 200]
+            }else{
+                resp = [response: ["message": "No puede realizar el put"], status: 404]
+            }
+        }else
+            resp = [response: ["message": "Los datos ingresados son incorrectos"], status:400]
+
+        print "Mapa Final: "+resp
+
+        render resp as JSON
+    }
+
+    def putDireccion(){
+        println "==========    [INICIA_PUT_DE_DIRECCION]    =========="
+        Map json = request.getJSON()
+        Map querystring = getParams()
+
+
+        Map resp
+        if (personaService.validacionPutDireccion(json,querystring))
+        {
+            def data = personaService.datosValidosPutDireccion(json, querystring)
+            Map direccion = personaService.putDireccion(data)
+            if(direccion){
+                resp = [response: direccion, status: 200]
+            }else{
+                resp = [response: ["message": "No puede realizar el put"], status: 404]
+            }
+        }else
+            resp = [response: ["message": "Los datos ingresados son incorrectos"], status:400]
+
+        print "Mapa Final: "+resp
+
+        render resp as JSON
+    }
 }
